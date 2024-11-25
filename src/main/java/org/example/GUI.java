@@ -139,7 +139,7 @@ public class GUI {
                         selectImage.setText(fileName);
                     }
 
-
+               /*    NISTA NE RADI
                 try {
                     image = ImageIO.read(new File(directory+fileName));
                 } catch (IOException ex) {
@@ -148,7 +148,7 @@ public class GUI {
                 JLabel picLabel = new JLabel(new ImageIcon(image)); picLabel.setSize(10,10);
                 JPanel imagePanel = new JPanel(); imagePanel.setSize(50,50); imagePanel.add(picLabel);
                 grid.gridx = 3; grid.gridy = 1; grid.gridwidth = 2; grid.gridheight = 4; panel.add(imagePanel,grid);
-
+            */
             }
             });
 
