@@ -1,6 +1,7 @@
 package org.example;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.plaf.IconUIResource;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -8,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.zip.CheckedOutputStream;
 
 // ┌──────────────────────────────────────────────┐
 // │ Project by Etian Križman 89201173 2024/25 ®  │
@@ -34,6 +36,7 @@ public class GUI {
     //DistrKerneling distr = new DistrKerneling();
     private static String selectedMode = "";
     private static String selectedKernel = "Custom";
+    private static BufferedImage image;
 
     static boolean enableTable = false;
     static String directory = "";
@@ -56,16 +59,20 @@ public class GUI {
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        JPanel panel1 = new JPanel(new GridLayout());
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints grid = new GridBagConstraints();
+
+
+/*        JPanel panel1 = new JPanel(new GridLayout());
         JPanel panel2 = new JPanel(); panel2.setPreferredSize(new Dimension(620, 300));
         panel2.setLayout(new BoxLayout(panel2, BoxLayout.PAGE_AXIS));
         JPanel panel3 = new JPanel();
         JPanel panel4 = new JPanel(); panel4.setLayout(new BoxLayout(panel4,  BoxLayout.PAGE_AXIS));
         JPanel panel5 = new JPanel();
         JPanel panel6 = new JPanel(new FlowLayout());
-        JPanel panel7 = new JPanel(); panel7.setLayout(new BoxLayout(panel7, BoxLayout.X_AXIS));
+        JPanel panel7 = new JPanel(); panel7.setLayout(new BoxLayout(panel7, BoxLayout.X_AXIS));*/
 
-        JSeparator separator;
+
 
         // RADIO REVERIE
             JRadioButton seqRadio = new JRadioButton("Sequential");
@@ -73,7 +80,10 @@ public class GUI {
             JRadioButton distrRadio = new JRadioButton("Distributed");
             ButtonGroup group = new ButtonGroup();
             group.add(seqRadio); group.add(parRadio); group.add(distrRadio);
-            panel7.add(seqRadio); panel7.add(parRadio); panel7.add(distrRadio);
+            //panel7.add(seqRadio); panel7.add(parRadio); panel7.add(distrRadio);
+            grid.gridx = 0; grid.gridy = 1 ; panel.add(seqRadio, grid);
+            grid.gridx = 0; grid.gridy = 2 ; panel.add(parRadio, grid);
+            grid.gridx = 0; grid.gridy = 3 ; panel.add(distrRadio, grid);
 
         // JTABLE
             DefaultTableModel tableModel = new DefaultTableModel(3,3);
@@ -81,7 +91,8 @@ public class GUI {
             matrixTable.getColumnModel().getColumn(0).setPreferredWidth(30);
             matrixTable.getColumnModel().getColumn(1).setPreferredWidth(30);
             matrixTable.getColumnModel().getColumn(2).setPreferredWidth(30);
-            panel7.add(matrixTable);
+            //panel7.add(matrixTable);
+            grid.gridx = 1; grid.gridy = 1; panel.add(matrixTable, grid); //🔁
 
         // DROPDOWN MENU - JComboBox
         JLabel kernelLabel = new JLabel("Filter: ");
@@ -94,34 +105,26 @@ public class GUI {
             matrixTable.setEnabled(enableTable);
             System.out.println("Selected kernel: " + selectedKernel);
         });
-        panel6.add(kernelLabel); panel6.add(kernelMode);
+        //panel6.add(kernelLabel); panel6.add(kernelMode);
+        grid.gridx = 0; grid.gridy = 0; panel.add(kernelLabel,grid);
+        grid.gridx = 1; grid.gridy = 0; panel.add(kernelMode, grid);
+
+        JSeparator separator = new JSeparator(SwingConstants.VERTICAL);
+        separator.setPreferredSize(new Dimension(10,100));
+        grid.gridx = 2; grid.gridy = 0; grid.gridheight = 4; panel.add(separator, grid);
 
 
 
-
-
-        // GLYPH CASTER
-        JTextArea textArea = new JTextArea();
-        textArea.setBackground(new Color(255,255,255));
-        //textArea.setSize(600, 200);
-        textArea.setBorder(BorderFactory.createLineBorder(Color.black, 2));
-        textArea.setFont(new Font("Lucida Console", Font.PLAIN, 12));
-        textArea.setText("[Console]");
-        textArea.setLineWrap(true);
-        textArea.setWrapStyleWord(true);
-        textArea.setEditable(false);
-        textArea.setVisible(true);
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setSize(600,300);
-        panel3.add(scrollPane);
 
 
         // IMAGE CURATOR
-        JButton selectImage = new JButton("no image selected");
         JLabel imageLabel = new JLabel("Selected image: ");
+        JButton selectImage = new JButton("none");
+
         selectImage.addActionListener(new ActionListener() {
-                @Override
+            
+
+            @Override
                 public void actionPerformed(ActionEvent e) {
                     FileDialog fileDialog = new FileDialog((Frame) null, "Select an Image");
                     fileDialog.setVisible(true);
@@ -135,12 +138,22 @@ public class GUI {
                         System.out.println("Selected file: " + /*GUI.*/directory + /*GUI.*/fileName);
                         selectImage.setText(fileName);
                     }
-                    
 
+                try {
+                    image = ImageIO.read(new File(directory+fileName));
+                } catch (IOException ex) {
+                    System.out.println("An error occured while trying to load the image");
                 }
+                JLabel picLabel = new JLabel(new ImageIcon(image));
+                grid.gridx = 3; grid.gridy = 1; grid.gridwidth = 2; grid.gridheight = 4; panel.add(picLabel,grid);
+
+            }
             });
-        panel5.add(imageLabel);
-        panel5.add(selectImage);
+
+        grid.gridx = 3; grid.gridy = 0; panel.add(imageLabel, grid);
+        grid.gridx = 4; grid.gridy = 0; panel.add(selectImage, grid);
+        //panel5.add(imageLabel);
+        //panel5.add(selectImage);
         //panel5.add();     IMAGE PREVIEW
 
 
@@ -221,11 +234,30 @@ public class GUI {
                     System.out.println( selectedMode + " mode is selected");
                 }
             });
-        panel7.add(runButton);
+        grid.gridx = 1; grid.gridy = 4; panel.add(runButton, grid);
+        //panel7.add(runButton);
 
+
+        // GLYPH CASTER
+        JTextArea textArea = new JTextArea();
+        textArea.setBackground(new Color(255,255,255));
+        //textArea.setSize(600, 200);
+        textArea.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
+        textArea.setFont(new Font("Lucida Console", Font.PLAIN, 12));
+        textArea.setText("[Console logs]\n\n\n\n\n");
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setEditable(false);
+        textArea.setSize(500,200);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        //scrollPane.setSize(600,300);
+        //panel3.add(scrollPane);
+        grid.gridx = 0; grid.gridy = 5; grid.gridwidth = 4; panel.add(textArea, grid);
 
         // THE TYRANNY OF THE GRID
-        panel4.add(panel6);
+        /*panel4.add(panel6);
         panel4.add(panel7);
         panel2.add(panel4);
         panel2.add(panel5);
@@ -233,7 +265,8 @@ public class GUI {
         panel1.add(panel3);
         frame.add(panel1);
         frame.add(panel2);
-        frame.add(panel3, BorderLayout.SOUTH);
+        frame.add(panel3, BorderLayout.SOUTH);*/
+        frame.add(panel);
         frame.setVisible(true);
     }
 
