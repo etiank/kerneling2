@@ -139,13 +139,15 @@ public class GUI {
                         selectImage.setText(fileName);
                     }
 
+
                 try {
                     image = ImageIO.read(new File(directory+fileName));
                 } catch (IOException ex) {
                     System.out.println("An error occured while trying to load the image");
                 }
-                JLabel picLabel = new JLabel(new ImageIcon(image));
-                grid.gridx = 3; grid.gridy = 1; grid.gridwidth = 2; grid.gridheight = 4; panel.add(picLabel,grid);
+                JLabel picLabel = new JLabel(new ImageIcon(image)); picLabel.setSize(10,10);
+                JPanel imagePanel = new JPanel(); imagePanel.setSize(50,50); imagePanel.add(picLabel);
+                grid.gridx = 3; grid.gridy = 1; grid.gridwidth = 2; grid.gridheight = 4; panel.add(imagePanel,grid);
 
             }
             });
@@ -252,8 +254,6 @@ public class GUI {
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        //scrollPane.setSize(600,300);
-        //panel3.add(scrollPane);
         grid.gridx = 0; grid.gridy = 5; grid.gridwidth = 4; panel.add(textArea, grid);
 
         // THE TYRANNY OF THE GRID
