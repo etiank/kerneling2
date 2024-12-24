@@ -229,6 +229,7 @@ public class GUI {
                         System.out.println("Kernel not specified. Identity kernel will be used.");
                 }
 
+
                 // Check which radio button is selected
                 if (seqRadio.isSelected()) {
                     selectedMode = "Sequential";
