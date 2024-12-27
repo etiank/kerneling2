@@ -34,17 +34,16 @@ public class GUI {
         new GUI();
     }
 
-    //SeqKerneling seq = new SeqKerneling();
-    //ParKerneling par = new ParKerneling();
-    //DistrKerneling distr = new DistrKerneling();
+
     private static String selectedMode = "";
     private static String selectedKernel = "Custom";
     private static BufferedImage image;
+    public static JTextArea textArea = new JTextArea();
 
     static boolean enableTable = false;
     static String directory = "";
     static String fileName = "";
-    static float[][] kernel =  new float[][] { // DEFAULT KERNEL IS IDENTITY
+    public static float[][] kernel =  new float[][] { // DEFAULT KERNEL IS IDENTITY
             {0, 0, 0},
             {0, 1, 0},
             {0, 0, 0}
@@ -58,23 +57,12 @@ public class GUI {
         JFrame frame = new JFrame("Process image kerneling");
         ImageIcon icon = new ImageIcon("icon.jpg");
         frame.setIconImage(icon.getImage());
-        frame.setSize(620,400);
+        frame.setSize(600,400);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints grid = new GridBagConstraints();
-
-
-/*        JPanel panel1 = new JPanel(new GridLayout());
-        JPanel panel2 = new JPanel(); panel2.setPreferredSize(new Dimension(620, 300));
-        panel2.setLayout(new BoxLayout(panel2, BoxLayout.PAGE_AXIS));
-        JPanel panel3 = new JPanel();
-        JPanel panel4 = new JPanel(); panel4.setLayout(new BoxLayout(panel4,  BoxLayout.PAGE_AXIS));
-        JPanel panel5 = new JPanel();
-        JPanel panel6 = new JPanel(new FlowLayout());
-        JPanel panel7 = new JPanel(); panel7.setLayout(new BoxLayout(panel7, BoxLayout.X_AXIS));*/
-
 
 
         // RADIO REVERIE
@@ -93,17 +81,39 @@ public class GUI {
         matrixTable.getColumnModel().getColumn(2).setPreferredWidth(30);
 
 
+        // GLYPH CASTER
+        //
+        textArea.setAutoscrolls(true);
+        textArea.setBackground(new Color(255,255,255));
+        textArea.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
+        textArea.setFont(new Font("Lucida Console", Font.PLAIN, 12));
+        textArea.append("[Console logs]\n\n");
+        //textArea.setLineWrap(true);
+        textArea.setMinimumSize(new Dimension(500,150));
+
+        //textArea.setWrapStyleWord(true);
+        textArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setMinimumSize(new Dimension(500,150));
+        JScrollBar bar = new JScrollBar(JScrollBar.VERTICAL);
+        scrollPane.setVerticalScrollBar(bar);
+        scrollPane.setWheelScrollingEnabled(true);
+        scrollPane.setAutoscrolls(true);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
         // DROPDOWN MENU - JComboBox
         JLabel kernelLabel = new JLabel("Filter: ");
         kernelLabel.setBorder(BorderFactory.createLineBorder(Color.black));
         JComboBox<String> kernelMode = new JComboBox<>(
-                new String[]{"Custom", "Sharpen", "Box blur", "Gaussian blur", "Edge detection", "Emboss"});
+                new String[]{"","Custom", "Sharpen", "Box blur", "Gaussian blur", "Edge detection", "Emboss"});
         kernelMode.addActionListener((e) -> {
-            GUI.selectedKernel = (String) kernelMode.getSelectedItem();
+            selectedKernel = (String) kernelMode.getSelectedItem();
             if (GUI.selectedKernel != "Custom"){GUI.enableTable = false;}
             else {GUI.enableTable = true;}
             matrixTable.setEnabled(enableTable);
             System.out.println("Selected kernel: " + selectedKernel);
+            log("Selected kernel: " + selectedKernel + " \n", textArea);
         });
         kernelMode.setBorder(BorderFactory.createLineBorder(Color.black));
 
@@ -133,30 +143,33 @@ public class GUI {
                 fileName = fileDialog.getFile();
 
                 // PRINT NAME & DIR
+                try{
                 if (GUI.fileName != null) {
-                    System.out.println("Selected file: " + directory + fileName);
+                    //System.out.println("Selected file: " + directory + fileName);
+                    log("Selected file: " + directory + fileName + " \n", textArea);
                     selectImage.setText(fileName);
-                }
+                }} catch (Exception ex){log("Error: no image was selected.\n", textArea);};
+
                 Image image2 = null;
                 try {
                     image = ImageIO.read(new File(directory+fileName));
                     if (image.getHeight()>image.getWidth()) {
                         double ratio = (double) image.getHeight()/image.getWidth();
-                        System.out.println(ratio);
+                        //System.out.println(ratio);
                         image2 = image.getScaledInstance((int)(200/ratio),200 , Image.SCALE_FAST);
                     }else {
                         double ratio = (double) image.getWidth()/image.getHeight();
-                        System.out.println(ratio);
+                        //System.out.println(ratio);
                         image2 = image.getScaledInstance(200,(int)(200/ratio), Image.SCALE_FAST);
                     }
 
                 } catch (IOException ex) {
                     System.out.println("An error occured while trying to load the image");
                 }
-                System.out.println("Image2 size: "+ image2.getWidth(null)+"x"+image2.getHeight(null));
+                //System.out.println("Image2 size: "+ image2.getWidth(null)+"x"+image2.getHeight(null));
                 picLabel.setIcon(new ImageIcon(image2));// picLabel.setSize(10,10);
-                System.out.println(image.getWidth());
-                System.out.println(image.getHeight());
+                //System.out.println(image.getWidth());
+                //System.out.println(image.getHeight());
                 picLabel.setMaximumSize(new Dimension(10,10));
 
             }
@@ -177,7 +190,11 @@ public class GUI {
                         for (int i = 0; i < 3; i++) {
                             for (int j = 0; j < 3; j++) {
                                 Object value = matrixTable.getValueAt(i,j);
-                                GUI.kernel[i][j] = Float.parseFloat(value.toString());
+                                try{
+                                kernel[i][j] = Float.parseFloat(value.toString());
+                                } catch (NullPointerException ex) {
+                                    log("The values in the input table are null.\n", textArea);
+                                }
                             }
                         }
 
@@ -201,7 +218,7 @@ public class GUI {
 
                         break;
                     case "Gaussian blur":
-                        GUI.kernel = new float[][] {
+                        kernel = new float[][] {
                                 {1, 2, 1},
                                 {2, 4, 2},
                                 {1, 2, 1}
@@ -212,14 +229,14 @@ public class GUI {
 
                         break;
                     case "Edge detection":
-                        GUI.kernel = new float[][] {
+                        kernel = new float[][] {
                                 {-1, -1, -1},
                                 {-1,  8, -1},
                                 {-1, -1, -1}
                         };
                         break;
                     case "Emboss":
-                        GUI.kernel = new float[][]{
+                        kernel = new float[][]{
                                 {-2,-1, 0},
                                 {-1, 1, 1},
                                 { 0, 1, 2}
@@ -227,44 +244,31 @@ public class GUI {
                         break;
                     default:
                         System.out.println("Kernel not specified. Identity kernel will be used.");
+                        kernel = new float[][]{
+                                { 0, 0, 0},
+                                { 0, 1, 0},
+                                { 0, 0, 0}
+                        };
                 }
 
 
                 // Check which radio button is selected
                 if (seqRadio.isSelected()) {
                     selectedMode = "Sequential";
+                    Sequential.convolute(fileName, directory, kernel);
                 } else if (parRadio.isSelected()) {
                     selectedMode = "Parallel";
                 } else if (distrRadio.isSelected()) {
                     selectedMode = "Distributed";
                 } else {
-                    System.out.println("No option is selected");
+                    System.out.println("No option is selected.");
+                    log("No option is selected.\n", textArea);
                 }
-                System.out.println( selectedMode + " mode is selected");
+                System.out.println( selectedMode + " mode is selected.");
+                log(selectedMode + " mode is selected.\n", textArea);
             }
         });
 
-
-
-        // GLYPH CASTER
-        JTextArea textArea = new JTextArea();
-        textArea.setAutoscrolls(true);
-        textArea.setBackground(new Color(255,255,255));
-        textArea.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
-        textArea.setFont(new Font("Lucida Console", Font.PLAIN, 12));
-        textArea.append("[Console logs]\n\n");
-        textArea.setLineWrap(true);
-
-        //textArea.setWrapStyleWord(true);
-        textArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setMaximumSize(new Dimension(500,400));
-        JScrollBar bar = new JScrollBar(JScrollBar.VERTICAL);
-        scrollPane.setVerticalScrollBar(bar);
-        scrollPane.setWheelScrollingEnabled(true);
-        scrollPane.setAutoscrolls(true);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        //scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         // THE TYRANNY OF THE GRID
         //radio buttons
@@ -283,18 +287,14 @@ public class GUI {
 
         setConstraints(grid,1,4,1,1,GridBagConstraints.BOTH); panel.add(runButton, grid);
 
+        textArea.append("\n\n\n\n\n\n");
         frame.add(panel);
         frame.setVisible(true);
-        log("This is a test\n",textArea);
-        log("And this another test And this another test And this another test And this another test", textArea);
-        for (int i = 0; i < 50; i++) {
-            log("Log entry " + (i + 1) + "\n", textArea);
-        }
 
     }
 
-    private void log(String msg, JTextArea console){
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+    public static void log(String msg, JTextArea console){
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SSS");
         String dataString = dateFormat.format(System.currentTimeMillis());
         String messagePrefix = "[" + dataString + "] ";
         System.out.println(messagePrefix + msg);
