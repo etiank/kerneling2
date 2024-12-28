@@ -42,9 +42,9 @@ public class Sequential {
                         // pol rabi se vse pixle okoli
                         // (x-1, x, x+1,y-1, y, y+1)     →            ↓      ↓
                         Color pixelColor = new Color(image.getRGB(x+i,y+j));
-                        red += (int) (pixelColor.getRed() * kernel[i+1][j+1]);
-                        green += (int) (pixelColor.getRed() * kernel[i+1][j+1]);
-                        blue += (int) (pixelColor.getRed() * kernel[i+1][j+1]);
+                        red +=  (int) (pixelColor.getRed() * kernel[i+1][j+1]);
+                        green +=  (int) (pixelColor.getGreen() * kernel[i+1][j+1]);
+                        blue +=  (int) (pixelColor.getBlue() * kernel[i+1][j+1]);
                     }
                 }
 
