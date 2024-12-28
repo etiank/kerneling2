@@ -71,6 +71,7 @@ public class GUI {
         JRadioButton distrRadio = new JRadioButton("Distributed");
         ButtonGroup group = new ButtonGroup();
         group.add(seqRadio); group.add(parRadio); group.add(distrRadio);
+        // ACTION LISTENER ON ALL THE BUTTONS DA ZAZNA CHANGE
 
 
         // JTABLE
@@ -82,7 +83,7 @@ public class GUI {
 
 
         // GLYPH CASTER
-        //
+
         textArea.setAutoscrolls(true);
         textArea.setBackground(new Color(255,255,255));
         textArea.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
