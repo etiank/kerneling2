@@ -35,7 +35,6 @@ public class Parallel {
 
         //magic happens here
 
-
         openImage();
     }
 
