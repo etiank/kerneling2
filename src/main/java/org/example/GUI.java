@@ -157,11 +157,11 @@ public class GUI {
                     if (image.getHeight()>image.getWidth()) {
                         double ratio = (double) image.getHeight()/image.getWidth();
                         //System.out.println(ratio);
-                        image2 = image.getScaledInstance((int)(200/ratio),200 , Image.SCALE_FAST);
+                        image2 = image.getScaledInstance((int)(150/ratio),150 , Image.SCALE_FAST);
                     }else {
                         double ratio = (double) image.getWidth()/image.getHeight();
                         //System.out.println(ratio);
-                        image2 = image.getScaledInstance(200,(int)(200/ratio), Image.SCALE_FAST);
+                        image2 = image.getScaledInstance(150,(int)(150/ratio), Image.SCALE_FAST);
                     }
 
                 } catch (IOException ex) {
@@ -220,12 +220,12 @@ public class GUI {
                         break;
                     case "Gaussian blur":
                         kernel = new float[][] {
-                                {1, 2, 1},
-                                {2, 4, 2},
-                                {1, 2, 1}
+                                {2, 4, 2},  // {1, 2, 1},
+                                {4, 8, 4},  // {2, 4, 2},
+                                {2, 4, 2}   // {1, 2, 1}
                         };
                         for (int i = 0; i < GUI.kernel.length; i++) {
-                            for (int j = 0; j < GUI.kernel[i].length; j++) GUI.kernel[i][j] = GUI.kernel[i][j] * (float)(1.0/16);
+                            for (int j = 0; j < GUI.kernel[i].length; j++) GUI.kernel[i][j] = GUI.kernel[i][j] * (float)(1.0/36); // was 1/16
                         }
 
                         break;
@@ -259,6 +259,7 @@ public class GUI {
                     Sequential.convolute(fileName, directory, kernel);
                 } else if (parRadio.isSelected()) {
                     selectedMode = "Parallel";
+                    Parallel.convolute(fileName, directory, kernel);
                 } else if (distrRadio.isSelected()) {
                     selectedMode = "Distributed";
                 } else {

@@ -9,8 +9,6 @@ import java.io.IOException;
 
 public class Sequential {
 
-    //GUI gui = new GUI();
-
     public static void convolute(String fileName, String directory, float[][] kernel){
 
         // KEEPING TRACK OF TIME
@@ -49,9 +47,9 @@ public class Sequential {
                 }
 
                 //save the new values
-                int newRed = (int) Math.min( 255, Math.max(0, red));
-                int newGreen = (int) Math.min(255, Math.max(0, green));
-                int newBlue = (int) Math.min(255, Math.max(0, blue));
+                int newRed      = Math.min( 255, Math.max(0, red));
+                int newGreen    = Math.min(255, Math.max(0, green));
+                int newBlue     = Math.min(255, Math.max(0, blue));
 
                 // merge them into one pixel
                 int rgb = new Color(newRed, newGreen, newBlue).getRGB();
@@ -75,8 +73,8 @@ public class Sequential {
     }
 
     public static void openImage(){
+        // https://kodejava.org/how-do-i-open-a-file-using-the-default-registered-application/
         File outputFile = new File("output.png");
-
         Desktop desktop = Desktop.getDesktop();
         try {
             desktop.open(outputFile);
