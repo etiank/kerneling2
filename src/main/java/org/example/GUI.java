@@ -30,15 +30,14 @@ import java.util.zip.CheckedOutputStream;
 
 public class GUI {
 
-    public static void main(String[] args) {
-        new GUI();
-    }
+    public static void main(String[] args) {new GUI(args);}
 
 
     private static String selectedMode = "";
     private static String selectedKernel = "Custom";
     private static BufferedImage image;
     public static JTextArea textArea = new JTextArea();
+
 
     static boolean enableTable = false;
     static String directory = "";
@@ -51,7 +50,7 @@ public class GUI {
 
 
 
-    public GUI() {
+    public GUI(String[] args) {
 
         // FRAME THE FRAME
         JFrame frame = new JFrame("Process image kerneling");
@@ -71,7 +70,6 @@ public class GUI {
         JRadioButton distrRadio = new JRadioButton("Distributed");
         ButtonGroup group = new ButtonGroup();
         group.add(seqRadio); group.add(parRadio); group.add(distrRadio);
-        // ACTION LISTENER ON ALL THE BUTTONS DA ZAZNA CHANGE
 
 
         // JTABLE
@@ -264,6 +262,7 @@ public class GUI {
                     Parallel.convolute(fileName, directory, kernel);
                 } else if (distrRadio.isSelected()) {
                     selectedMode = "Distributed";
+                    Distributed.convolute(fileName,directory, kernel, args);
                 } else {
                     System.out.println("No option is selected.");
                     log("No option is selected.\n", textArea);
