@@ -254,6 +254,8 @@ public class GUI {
 
 
                 // Check which radio button is selected
+                // CREDO CHE PER FARE FIX QUESTO: INTANTO METTERE FUORI DAL
+                // BUTTON ACTIONLISTENER & IMPLEMENTARE SOME KINDA WHILE LOOP (WHILE-DO)
                 if (seqRadio.isSelected()) {
                     selectedMode = "Sequential";
                     Sequential.convolute(fileName, directory, kernel);

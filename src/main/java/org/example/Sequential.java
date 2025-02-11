@@ -21,7 +21,7 @@ public class Sequential {
         } catch (IOException e) {throw new RuntimeException(e);}
 
         width = image.getWidth(); height = image.getHeight();
-        GUI.log("Width: " + width + " Height: " + height + "\n", GUI.textArea);
+        GUI.log("Size: " + width + "x" + height + "\n", GUI.textArea);
         BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB); // torej rgb vsako posebej
 
 
@@ -30,9 +30,9 @@ public class Sequential {
             for (int x = 1; x < width -1; x++) {
 
                 //vsako barvo posebej
-                int red = 0;
-                int green = 0;
-                int blue = 0;
+                int red     = 0;
+                int green   = 0;
+                int blue    = 0;
 
                 for (int i = -1; i <= 1; i++) {
                     for (int j = -1; j <= 1; j++) {
@@ -40,9 +40,9 @@ public class Sequential {
                         // pol rabi se vse pixle okoli
                         // (x-1, x, x+1,y-1, y, y+1)     →            ↓      ↓
                         Color pixelColor = new Color(image.getRGB(x+i,y+j));
-                        red +=  (int) (pixelColor.getRed() * kernel[i+1][j+1]);
-                        green +=  (int) (pixelColor.getGreen() * kernel[i+1][j+1]);
-                        blue +=  (int) (pixelColor.getBlue() * kernel[i+1][j+1]);
+                        red     +=  (int) (pixelColor.getRed() * kernel[i+1][j+1]);
+                        green   +=  (int) (pixelColor.getGreen() * kernel[i+1][j+1]);
+                        blue    +=  (int) (pixelColor.getBlue() * kernel[i+1][j+1]);
                     }
                 }
 
@@ -67,7 +67,8 @@ public class Sequential {
         }
 
         t = System.currentTimeMillis() - t0;
-        System.out.println("The SEQUENTIAL convolution took " + t + "ms.");
+        //System.out.println("The SEQUENTIAL convolution took " + t + "ms.");
+        GUI.log("The SEQUENTIAL convolution took " + t + "ms.\n", GUI.textArea);
         openImage();
 
     }
