@@ -1,4 +1,5 @@
 package org.example;
+import mpi.MPI;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.ComboBoxUI;
@@ -20,19 +21,34 @@ import java.util.zip.CheckedOutputStream;
 // │ The kernel image processing project reborn   │
 // └──────────────────────────────────────────────┘
 
-/*      TO DO
-
-    - figure out how to get JTable to display
-    - dropdown menu
-    - find new more interesting kernels
-
-*/
 
 public class GUI {
 
-    public static void main(String[] args) {new GUI(args);}
+    public static void main(String[] args) {
+
+        MPI.Init(args);
+        int me = MPI.COMM_WORLD.Rank();
+        int nodes = MPI.COMM_WORLD.Size();
+        System.out.println("Hello from " + me + " out of " + nodes + " nodes");
+
+        if (me==ROOT) { // control the gui
+            new GUI(nodes);
+        } else {   // receive kernel, image_size,
+            float[][] receivedKernel = new float[3][3];
+            MPI.COMM_WORLD.Bcast(receivedKernel, 0, 3, MPI.FLOAT, ROOT);
+            int[] dimensions = new int[2];
+            MPI.COMM_WORLD.Bcast(dimensions, 0, 2, MPI.INT, ROOT);
+            int width = dimensions[0];
+            int height = dimensions[1];
+
+        }
 
 
+        MPI.Finalize();
+
+    }
+
+    public static final int ROOT = 0;
     private static String selectedMode = "";
     private static String selectedKernel = "Custom";
     private static BufferedImage image;
@@ -50,7 +66,7 @@ public class GUI {
 
 
 
-    public GUI(String[] args) {
+    public GUI(int nodes) {
 
         // FRAME THE FRAME
         JFrame frame = new JFrame("Process image kerneling");
@@ -262,7 +278,37 @@ public class GUI {
                     Parallel.convolute(fileName, directory, kernel);
                 } else if (distrRadio.isSelected()) {
                     selectedMode = "Distributed";
-                    Distributed.convolute(fileName,directory, kernel, args);
+
+                    int width = image.getWidth();
+                    int height = image.getHeight();
+                    // image bomo delili na strips
+                    int stripHeight =  height / nodes;
+
+                    BufferedImage[] strips = new BufferedImage[nodes];
+                    for (int i = 0; i < nodes; i++) {
+                        int startY = i * stripHeight;
+                        int endY;
+                        if (i == nodes - 1) {
+                            endY = height; // ce je i last index -> endY = height
+                        } else {
+                            endY = startY + stripHeight; // ce ne..
+                        }
+                        strips[i] = image.getSubimage(0, startY, width, endY - startY);
+                    }
+
+                    //Bcast kernel & image size to all threads
+                    MPI.COMM_WORLD.Bcast(kernel, 0, 3, MPI.FLOAT, ROOT); //kernel
+                    MPI.COMM_WORLD.Bcast(new int[]{width, height}, 0, 2, MPI.INT, ROOT); //image size
+                    // 1 what we send, 2 from where we start, 3 how much, 4 which type, 5 root
+
+                    MPI.COMM_WORLD.Scatter(strips, 0, 1, MPI.OBJECT, null, 0, 0, MPI.OBJECT, ROOT);
+
+                    //MPI.COMM_WORLD.Gather();
+
+
+
+
+
                 } else {
                     System.out.println("No option is selected.");
                     log("No option is selected.\n", textArea);
@@ -308,5 +354,34 @@ public class GUI {
         grid.gridx = x;grid.gridy = y;grid.gridwidth = width;grid.gridheight = height;grid.fill=fill;
     }
 
+    private static BufferedImage convolute(BufferedImage image, float[][] kernel) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+        for (int y = 1; y < height - 1; y++) {
+            for (int x = 1; x < width - 1; x++) {
+                int red = 0, green = 0, blue = 0;
+
+                for (int i = -1; i <= 1; i++) {
+                    for (int j = -1; j <= 1; j++) {
+                        Color pixelColor = new Color(image.getRGB(x+i, y+j));
+                        red += (int) (pixelColor.getRed() * kernel[i+1][j+1]);
+                        green += (int) (pixelColor.getGreen() * kernel[i+1][j+1]);
+                        blue += (int) (pixelColor.getBlue() * kernel[i+1][j+1]);
+                    }
+                }
+
+                int newRed  = Math.min(255, Math.max(0, red));
+                int newGreen= Math.min(255, Math.max(0, green));
+                int newBlue = Math.min(255, Math.max(0, blue));
+
+                int rgb = new Color(newRed, newGreen, newBlue).getRGB();
+                resultImage.setRGB(x, y, rgb);
+            }
+        }
+
+        return resultImage;
+    }
 
 }
