@@ -40,7 +40,6 @@ public class GUI {
             MPI.COMM_WORLD.Bcast(dimensions, 0, 2, MPI.INT, ROOT);
             int width = dimensions[0];
             int height = dimensions[1];
-
         }
 
 
