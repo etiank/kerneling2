@@ -13,6 +13,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.zip.CheckedOutputStream;
 
 // ┌──────────────────────────────────────────────┐
@@ -34,12 +35,16 @@ public class GUI {
         if (me==ROOT) { // control the gui
             new GUI(nodes);
         } else {   // receive kernel, image_size,
-            float[][] receivedKernel = new float[3][3];
-            MPI.COMM_WORLD.Bcast(receivedKernel, 0, 3, MPI.FLOAT, ROOT);
+            float[] receivedKernel = new float[9];
+            MPI.COMM_WORLD.Bcast(receivedKernel, 0, 9, MPI.FLOAT, ROOT);
+            for (int i = 0; i < receivedKernel.length-1; i++) {
+                System.out.println("["+ me + "] " + receivedKernel[i]);
+            }
             int[] dimensions = new int[2];
             MPI.COMM_WORLD.Bcast(dimensions, 0, 2, MPI.INT, ROOT);
             int width = dimensions[0];
             int height = dimensions[1];
+            System.out.println("[" + me + "] Width: " + dimensions[0] + " Height: " + dimensions[1]);
         }
 
 
@@ -296,11 +301,23 @@ public class GUI {
                     }
 
                     //Bcast kernel & image size to all threads
-                    MPI.COMM_WORLD.Bcast(kernel, 0, 3, MPI.FLOAT, ROOT); //kernel
-                    MPI.COMM_WORLD.Bcast(new int[]{width, height}, 0, 2, MPI.INT, ROOT); //image size
+                    // ok kernel moram kot 1d array poslat
+                    float[] kernelB = { kernel[0][0], kernel[0][1], kernel[0][2],
+                                        kernel[1][0], kernel[1][1], kernel[1][2],
+                                        kernel[2][0], kernel[2][1], kernel[2][2]};
+
+                    System.out.println(Arrays.toString(kernelB));
+                    // sending KERNEL
+                    MPI.COMM_WORLD.Bcast(kernelB, 0, 8, MPI.FLOAT, ROOT);
+                    //SENDIGN SIZE
+                    MPI.COMM_WORLD.Bcast(new int[]{width, height}, 0, 2, MPI.INT, ROOT);
                     // 1 what we send, 2 from where we start, 3 how much, 4 which type, 5 root
 
-                    MPI.COMM_WORLD.Scatter(strips, 0, 1, MPI.OBJECT, null, 0, 0, MPI.OBJECT, ROOT);
+                    // convert strips into rgb values array to scatter
+
+
+                    //https://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
+                    //MPI.COMM_WORLD.Scatter(strips, 0, 1, MPI.OBJECT,null, 0, 0, MPI.OBJECT, ROOT);
 
                     //MPI.COMM_WORLD.Gather();
 
