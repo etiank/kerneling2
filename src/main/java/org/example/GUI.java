@@ -1,5 +1,5 @@
 package org.example;
-import mpi.MPI;
+import mpj.MPI;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.ComboBoxUI;
@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.zip.CheckedOutputStream;
@@ -27,6 +28,7 @@ public class GUI {
 
     public static void main(String[] args) {
 
+        System.setProperty("mpjbuf.size", "65536");
         MPI.Init(args);
         int me = MPI.COMM_WORLD.Rank();
         int nodes = MPI.COMM_WORLD.Size();
@@ -45,6 +47,19 @@ public class GUI {
             int width = dimensions[0];
             int height = dimensions[1];
             System.out.println("[" + me + "] Width: " + dimensions[0] + " Height: " + dimensions[1]);
+
+            recvBuff = new int[width*height];
+            /*MPI.COMM_WORLD.Scatter(null, 0, 0, MPI.INT,
+                    recvBuff, 0, height*width, MPI.INT, ROOT);*/
+            // kaj (null), od kje zacnemo (0), koliko posljemo (0), kaksen tip,
+            // kje dobimo, od kje naprej, koliko dobimo, kakasen tip, root
+
+
+            int test[] = convolute(width, height, receivedKernel, recvBuff);
+            for (int i = 0; i < height*width; i++) {
+
+            }
+
         }
 
 
@@ -62,6 +77,7 @@ public class GUI {
     static boolean enableTable = false;
     static String directory = "";
     static String fileName = "";
+    static int[] recvBuff;
     public static float[][] kernel =  new float[][] { // DEFAULT KERNEL IS IDENTITY
             {0, 0, 0},
             {0, 1, 0},
@@ -285,19 +301,13 @@ public class GUI {
 
                     int width = image.getWidth();
                     int height = image.getHeight();
-                    // image bomo delili na strips
-                    int stripHeight =  height / nodes;
+                    // image bomo delili na n strips, n = st workerjev
 
-                    BufferedImage[] strips = new BufferedImage[nodes];
-                    for (int i = 0; i < nodes; i++) {
-                        int startY = i * stripHeight;
-                        int endY;
-                        if (i == nodes - 1) {
-                            endY = height; // ce je i last index -> endY = height
-                        } else {
-                            endY = startY + stripHeight; // ce ne..
-                        }
-                        strips[i] = image.getSubimage(0, startY, width, endY - startY);
+                    int rootStrip=0;
+                    int stripHeight =0;
+                    if(height % nodes == 0) {stripHeight = height/nodes;rootStrip = stripHeight;} else {
+                        int h = height/nodes; int c = h * nodes;
+                        if (height-c != 0){rootStrip = h + (height-c); stripHeight = h;}
                     }
 
                     //Bcast kernel & image size to all threads
@@ -305,21 +315,39 @@ public class GUI {
                     float[] kernelB = { kernel[0][0], kernel[0][1], kernel[0][2],
                                         kernel[1][0], kernel[1][1], kernel[1][2],
                                         kernel[2][0], kernel[2][1], kernel[2][2]};
+                    //System.out.println(Arrays.toString(kernelB));
 
-                    System.out.println(Arrays.toString(kernelB));
-                    // sending KERNEL
-                    MPI.COMM_WORLD.Bcast(kernelB, 0, 8, MPI.FLOAT, ROOT);
-                    //SENDIGN SIZE
-                    MPI.COMM_WORLD.Bcast(new int[]{width, height}, 0, 2, MPI.INT, ROOT);
+                        // sending KERNEL
+                    MPI.COMM_WORLD.Bcast(kernelB, 0, 9, MPI.FLOAT, ROOT);
+                        //SENDIGN SIZE
+                    MPI.COMM_WORLD.Bcast(new int[]{width, stripHeight}, 0, 2, MPI.INT, ROOT);
                     // 1 what we send, 2 from where we start, 3 how much, 4 which type, 5 root
 
-                    // convert strips into rgb values array to scatter
+                        // convert image into rgb values array
+                    int[] rgbArray = new int[width * height];
+                    image.getRGB(0,0,width,height,rgbArray,0,width);
+
+                    //System.out.println(directory+fileName); JUST CHECKING
+                    //for (int i = 0; i < width*height-1; i++) {System.out.print(rgbArray[i] + " ");}
+
+                        // give array to scatter to do the scattering
+                    recvBuff = new int[stripHeight*width];
+                    MPI.COMM_WORLD.Scatter(rgbArray, rootStrip*width, stripHeight*width, MPI.INT,
+                                            recvBuff, 0, stripHeight*width, MPI.INT, ROOT);
+                    // kaj, od kje zacnemo, koliko posljemo, kaksen tip,
+                    // kje dobimo, od kje naprej, koliko dobimo, kakasen tip, root
+
+
+                    int test[] = convolute(width, rootStrip, kernelB, recvBuff);
+
+                    //MPI.COMM_WORLD.Gather();
+
 
 
                     //https://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
                     //MPI.COMM_WORLD.Scatter(strips, 0, 1, MPI.OBJECT,null, 0, 0, MPI.OBJECT, ROOT);
 
-                    //MPI.COMM_WORLD.Gather();
+
 
 
 
@@ -370,33 +398,67 @@ public class GUI {
         grid.gridx = x;grid.gridy = y;grid.gridwidth = width;grid.gridheight = height;grid.fill=fill;
     }
 
-    private static BufferedImage convolute(BufferedImage image, float[][] kernel) {
-        int width = image.getWidth();
-        int height = image.getHeight();
-        BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    private static int[] convolute(int width, int height, float[] kernel, int[] buff) {
+
+        float[][] kernel2 = new float[3][3]; // hard coded
+        kernel2[0][0] = kernel[0]; kernel2[0][1] = kernel[1]; kernel2[0][2] = kernel[2];
+        kernel2[1][0] = kernel[3]; kernel2[1][1] = kernel[4]; kernel2[1][2] = kernel[5];
+        kernel2[2][0] = kernel[6]; kernel2[2][1] = kernel[7]; kernel2[2][2] = kernel[8];
+
+        //checking kernel
+        /*for (int i = 0; i <= 2; i++) {
+            for (int j = 0; j <= 2; j++) {
+                System.out.println("kernel2: " + kernel2[i][j]);
+            }
+        }*/
+
+        // 1d array into 2d array
+        int[][] imageArr = new int[width][height];
+        int[][] image = new int[width][height];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                System.out.println("buff: " + buff[j * width + i]);
+                imageArr[i][j] = buff[j * (width) + i];
+            }
+        }
 
         for (int y = 1; y < height - 1; y++) {
             for (int x = 1; x < width - 1; x++) {
                 int red = 0, green = 0, blue = 0;
 
                 for (int i = -1; i <= 1; i++) {
-                    for (int j = -1; j <= 1; j++) {
-                        Color pixelColor = new Color(image.getRGB(x+i, y+j));
-                        red += (int) (pixelColor.getRed() * kernel[i+1][j+1]);
-                        green += (int) (pixelColor.getGreen() * kernel[i+1][j+1]);
-                        blue += (int) (pixelColor.getBlue() * kernel[i+1][j+1]);
+                    for (int j = -1; j <= 1; j++) { //to ne bo slo tako
+
+                        int pixelColor = imageArr[x+i][y+j]; // color of the int
+                        //System.out.println("pixelColor: " + pixelColor);
+                        //https://stackoverflow.com/questions/25761438/understanding-bufferedimage-getrgb-output-values
+                        int redComponent    = (pixelColor >> 16) & 0xFF; // shifting & masking
+                        int greenComponent  = (pixelColor >> 8) & 0xFF;
+                        int blueComponent   = pixelColor & 0xFF;
+                        //System.out.println("R: " + redComponent +" G: " + greenComponent + " B: " + blueComponent);
+                        red     += (int) (redComponent  * kernel2[i+1][j+1]);
+                        green   += (int) (greenComponent* kernel2[i+1][j+1]);
+                        blue    += (int) (blueComponent * kernel2[i+1][j+1]);
+                        //System.out.println("R: " + red +" G: " + green + " B: " + blue);
                     }
                 }
 
                 int newRed  = Math.min(255, Math.max(0, red));
                 int newGreen= Math.min(255, Math.max(0, green));
                 int newBlue = Math.min(255, Math.max(0, blue));
-
                 int rgb = new Color(newRed, newGreen, newBlue).getRGB();
-                resultImage.setRGB(x, y, rgb);
+
+                //System.out.println("rgb: "+ rgb); // checking
+                image[x][y] = rgb;
             }
         }
 
+        int[] resultImage = new int[width*height];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                resultImage[j* width +i] = image[i][j];
+            }
+        }
         return resultImage;
     }
 
