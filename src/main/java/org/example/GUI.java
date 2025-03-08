@@ -1,10 +1,7 @@
 package org.example;
-import mpj.MPI;
+import mpi.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.plaf.ComboBoxUI;
-import javax.swing.plaf.IconUIResource;
-import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -12,10 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.Buffer;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.zip.CheckedOutputStream;
 
 // ┌──────────────────────────────────────────────┐
 // │ Project by Etian Križman 89201173 2024/25 ®  │
@@ -27,7 +21,7 @@ import java.util.zip.CheckedOutputStream;
 public class GUI {
 
     public static void main(String[] args) {
-
+            
         System.setProperty("mpjbuf.size", "65536");
         MPI.Init(args);
         int me = MPI.COMM_WORLD.Rank();

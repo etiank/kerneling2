@@ -1,5 +1,5 @@
 package org.example;
-
+/*
 import mpi.*;
 
 
@@ -17,3 +17,4 @@ public class Distributed {
 
     }
 }
+*/
