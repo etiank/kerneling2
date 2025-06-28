@@ -20,7 +20,7 @@ public class Parallel {
         GUI.log("Number of available CORES: " + CORES + "\n", GUI.textArea);
 
         // KEEPING TRACK OF TIME
-        long t0 = System.currentTimeMillis(); long t;
+
         BufferedImage image;
         int width; int height;
 
@@ -32,13 +32,19 @@ public class Parallel {
         GUI.log("Width: " + width + " Height: " + height + "\n", GUI.textArea);
         BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB); // torej rgb vsako posebej
 
-
+        long t0 = System.currentTimeMillis(); long t; // moved here from line 23 to not include bufferedimage into the convolution time
         //magic happens here
         RecursiveTask task = new RecursiveTask(image, resultImage, kernel, 1, height-1, 1, width-1);
+        forkJoinPool.invoke(task);
 
         t = System.currentTimeMillis() - t0;
         //System.out.println("The PARALLEL convolution took " + t + "ms.");
         GUI.log("The PARALLEL convolution took " + t + "ms.\n", GUI.textArea);
+        try {
+            ImageIO.write(resultImage, "png", new File("output.png"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         openImage();
     }
 
@@ -109,8 +115,9 @@ public class Parallel {
                             new RecursiveTask(image, resultImage, kernel, midY, endY, startX, midX),    // (botleft)
                             new RecursiveTask(image, resultImage, kernel, midY, endY, midX, endX)       // (botright)
                 );
-            }
 
+
+            }
         }
     }
 

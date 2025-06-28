@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 
 // ┌──────────────────────────────────────────────┐
-// │ Project by Etian Križman 89201173 2024/25 ®  │
+// │ Project by Etian Križman 89201173 2024/25    │
 // │ github: https://github.com/etiank/kerneling2 │
 // │ The kernel image processing project reborn   │
 // └──────────────────────────────────────────────┘
@@ -394,7 +394,7 @@ public class GUI {
 
     private static int[] convolute(int width, int height, float[] kernel, int[] buff) {
 
-        float[][] kernel2 = new float[3][3]; // hard coded
+        float[][] kernel2 = new float[3][3]; // hard coded - converting kernel matrix to array
         kernel2[0][0] = kernel[0]; kernel2[0][1] = kernel[1]; kernel2[0][2] = kernel[2];
         kernel2[1][0] = kernel[3]; kernel2[1][1] = kernel[4]; kernel2[1][2] = kernel[5];
         kernel2[2][0] = kernel[6]; kernel2[2][1] = kernel[7]; kernel2[2][2] = kernel[8];

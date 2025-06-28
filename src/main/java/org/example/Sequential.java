@@ -12,7 +12,7 @@ public class Sequential {
     public static void convolute(String fileName, String directory, float[][] kernel){
 
         // KEEPING TRACK OF TIME
-        long t0 = System.currentTimeMillis(); long t;
+
         BufferedImage image;
         int width; int height;
 
@@ -24,6 +24,7 @@ public class Sequential {
         GUI.log("Size: " + width + "x" + height + "\n", GUI.textArea);
         BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB); // torej rgb vsako posebej
 
+        long t0 = System.currentTimeMillis(); long t; // moved here from line 15 to not include bufferedimage into the convolution time
 
         // CONVOLUTION
         for (int y = 1; y < height -1; y++) {
