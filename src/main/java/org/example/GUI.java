@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 
 // ┌──────────────────────────────────────────────┐
 // │ Project by Etian Križman 89201173 2024/25    │
@@ -22,34 +23,34 @@ public class GUI {
 
     public static void main(String[] args) {
             
-        System.setProperty("mpjbuf.size", "65536");
+        System.setProperty("mpjbuf.size", "65536"); // for internal message buffers
         MPI.Init(args);
-        int me = MPI.COMM_WORLD.Rank();
-        int nodes = MPI.COMM_WORLD.Size();
+        int me = MPI.COMM_WORLD.Rank(); // current process
+        int nodes = MPI.COMM_WORLD.Size(); // 5 i think
         System.out.println("Hello from " + me + " out of " + nodes + " nodes");
 
         if (me==ROOT) { // control the gui
             new GUI(nodes);
         } else {   // receive kernel, image_size,
             float[] receivedKernel = new float[9];
-            MPI.COMM_WORLD.Bcast(receivedKernel, 0, 9, MPI.FLOAT, ROOT);
-            for (int i = 0; i < receivedKernel.length-1; i++) {
+            MPI.COMM_WORLD.Bcast(receivedKernel, 0, 9, MPI.FLOAT, ROOT); // receive kernel ✅
+            for (int i = 0; i < receivedKernel.length; i++) {
                 System.out.println("["+ me + "] " + receivedKernel[i]);
             }
-            int[] dimensions = new int[2];
-            MPI.COMM_WORLD.Bcast(dimensions, 0, 2, MPI.INT, ROOT);
+            int[] dimensions = new int[2]; //
+            MPI.COMM_WORLD.Bcast(dimensions, 0, 2, MPI.INT, ROOT); //dimensions of image from root ✅
             int width = dimensions[0];
             int height = dimensions[1];
             System.out.println("[" + me + "] Width: " + dimensions[0] + " Height: " + dimensions[1]);
 
-            recvBuff = new int[width*height];
+            recvBuff = new int[width*height]; //
             /*MPI.COMM_WORLD.Scatter(null, 0, 0, MPI.INT,
                     recvBuff, 0, height*width, MPI.INT, ROOT);*/
             // kaj (null), od kje zacnemo (0), koliko posljemo (0), kaksen tip,
             // kje dobimo, od kje naprej, koliko dobimo, kakasen tip, root
 
 
-            int test[] = convolute(width, height, receivedKernel, recvBuff);
+            //int test[] = convolute(width, height, receivedKernel, recvBuff);
             for (int i = 0; i < height*width; i++) {
 
             }
@@ -297,48 +298,58 @@ public class GUI {
                     int height = image.getHeight();
                     // image bomo delili na n strips, n = st workerjev
 
-                    int rootStrip=0;
-                    int stripHeight =0;
+                    int rootStrip=0; int stripHeight =0;
+
+                    // ce je equally divisible then send equal sizes, otherwise root gets the bigger one
                     if(height % nodes == 0) {stripHeight = height/nodes;rootStrip = stripHeight;} else {
                         int h = height/nodes; int c = h * nodes;
                         if (height-c != 0){rootStrip = h + (height-c); stripHeight = h;}
+                        // convoluted way to assign the bigger strip to root
                     }
 
-                    //Bcast kernel & image size to all threads
                     // ok kernel moram kot 1d array poslat
                     float[] kernelB = { kernel[0][0], kernel[0][1], kernel[0][2],
-                                        kernel[1][0], kernel[1][1], kernel[1][2],
-                                        kernel[2][0], kernel[2][1], kernel[2][2]};
+                            kernel[1][0], kernel[1][1], kernel[1][2],
+                            kernel[2][0], kernel[2][1], kernel[2][2]};
                     //System.out.println(Arrays.toString(kernelB));
+
+
+                    // BCAST kernel & image size to all threads - "send out configuration parameters"
+                    // https://mpitutorial.com/tutorials/mpi-broadcast-and-collective-communication/
 
                         // sending KERNEL
                     MPI.COMM_WORLD.Bcast(kernelB, 0, 9, MPI.FLOAT, ROOT);
-                        //SENDIGN SIZE
+                        // SENDIGN SIZE
                     MPI.COMM_WORLD.Bcast(new int[]{width, stripHeight}, 0, 2, MPI.INT, ROOT);
-                    // 1 what we send, 2 from where we start, 3 how much, 4 which type, 5 root
+                        // 1 what we send, 2 from where we start, 3 how much, 4 which type, 5 root
 
-                        // convert image into rgb values array
+                        // convert image into rgb values array for scatter ❤️💚💙
                     int[] rgbArray = new int[width * height];
                     image.getRGB(0,0,width,height,rgbArray,0,width);
 
-                    //System.out.println(directory+fileName); JUST CHECKING
-                    //for (int i = 0; i < width*height-1; i++) {System.out.print(rgbArray[i] + " ");}
+                                //System.out.println(); //JUST CHECKING
+                                //for (int i = 0; i < width*height-1; i++) {System.out.print("a " + rgbArray[i] + " ");}
 
-                        // give array to scatter to do the scattering
+
+
+                    // give array to scatter() to do the SCATTERING - sends chunks of array to differnt processes
+                        // https://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
+
                     recvBuff = new int[stripHeight*width];
                     MPI.COMM_WORLD.Scatter(rgbArray, rootStrip*width, stripHeight*width, MPI.INT,
                                             recvBuff, 0, stripHeight*width, MPI.INT, ROOT);
+                    System.out.println("We've reached this point");
                     // kaj, od kje zacnemo, koliko posljemo, kaksen tip,
                     // kje dobimo, od kje naprej, koliko dobimo, kakasen tip, root
 
+                    //
+                    //int test[] = convolute(width, rootStrip, kernelB, recvBuff);
 
-                    int test[] = convolute(width, rootStrip, kernelB, recvBuff);
 
                     //MPI.COMM_WORLD.Gather();
 
 
 
-                    //https://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
                     //MPI.COMM_WORLD.Scatter(strips, 0, 1, MPI.OBJECT,null, 0, 0, MPI.OBJECT, ROOT);
 
 
@@ -400,6 +411,7 @@ public class GUI {
         kernel2[2][0] = kernel[6]; kernel2[2][1] = kernel[7]; kernel2[2][2] = kernel[8];
 
         //checking kernel
+
         /*for (int i = 0; i <= 2; i++) {
             for (int j = 0; j <= 2; j++) {
                 System.out.println("kernel2: " + kernel2[i][j]);
@@ -411,7 +423,7 @@ public class GUI {
         int[][] image = new int[width][height];
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                System.out.println("buff: " + buff[j * width + i]);
+                System.out.println("buff: " + buff[j * width + i]); // buff is all 0 ⚠️
                 imageArr[i][j] = buff[j * (width) + i];
             }
         }
