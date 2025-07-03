@@ -60,6 +60,8 @@ public class Sequential {
             }
         }
 
+        t = System.currentTimeMillis() - t0;
+
         //save the new image
         try {
             ImageIO.write(resultImage, "png", new File("output.png"));
@@ -67,7 +69,7 @@ public class Sequential {
             throw new RuntimeException(e);
         }
 
-        t = System.currentTimeMillis() - t0;
+
         //System.out.println("The SEQUENTIAL convolution took " + t + "ms.");
         GUI.log("The SEQUENTIAL convolution took " + t + "ms.\n", GUI.textArea);
         openImage();

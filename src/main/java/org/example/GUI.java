@@ -71,8 +71,14 @@ public class GUI {
             // kaj (null), od kje zacnemo (0), koliko posljemo (0), kaksen tip,
             // kje dobimo, od kje naprej, koliko dobimo, kakasen tip, root
 
+            int[] resultStrip = convolute(width, recvHeight, receivedKernel, recvBuff);
+            int sendCount = recvHeight*width;
 
+            MPI.COMM_WORLD.Gatherv(
+                    resultStrip, 0, sendCount, MPI.INT,
+                    null, 0, null , null, MPI.INT, ROOT);
 
+            System.out.println("["+ me +"]" + "Workers done! :)");
 
 
         }
@@ -359,6 +365,8 @@ public class GUI {
                     // BCAST kernel & image size to all threads - "send out configuration parameters"
                     // https://mpitutorial.com/tutorials/mpi-broadcast-and-collective-communication/
 
+                    long t0 = System.currentTimeMillis(); long t; // START COUNTING
+
                         // sending KERNEL
                     MPI.COMM_WORLD.Bcast(kernelB, 0, 9, MPI.FLOAT, ROOT); //✅
                         // SENDIGN SIZE
@@ -371,7 +379,7 @@ public class GUI {
                     MPI.COMM_WORLD.Bcast(stripHeights, 0, nodes, MPI.INT, ROOT);
 
 
-                    System.out.println("We've reached this point1");
+
                         // convert image into rgb values array for scatter ❤️💚💙
                     int[] rgbArray = new int[width * height];
                     image.getRGB(0,0,width,height,rgbArray,0,width);
@@ -380,13 +388,13 @@ public class GUI {
                     //System.out.println("length of rgbArray is: " + rgbArray.length); //JUST CHECKING
 
 
-                    System.out.println("We've reached this point2");
+
                     // give array to scatter() to do the SCATTERING - sends chunks of array to differnt processes
                         // https://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
 
                     int myHeight = stripHeights[me];
                     recvBuff = new int[myHeight*width];
-                    System.out.println("We've reached this point3");
+
                     // ScatterV: 1 (array) what is root sending, 2 (array sized as the total number of processes) where in the array to start taking data ,
                     // 3
 
@@ -394,19 +402,47 @@ public class GUI {
                             rgbArray, 0 , sendCounts, displs, MPI.INT,
                             recvBuff, 0, sendCounts[me], MPI.INT, ROOT);
 
-                    System.out.println("But not this point");
+                    System.out.println("We've made it to this point :)");
                     // kaj, od kje zacnemo, koliko posljemo, kaksen tip,
                     // kje dobimo, od kje naprej, koliko dobimo, kakasen tip, root
 
+                    // now it's time to CONVOLUTE
 
 
+                    int[] resultStrip = convolute(width, myHeight, kernelB, recvBuff);
+                    int[] finalImageBuffer = new int[height * width];
+                    int[] recvCounts = new int[nodes];
 
-                    //MPI.COMM_WORLD.Gather();
+                    offset = 0;
+                    for (int i = 0; i < nodes; i++) {
+                        recvCounts[i] = stripHeights[i] * width;
+                        displs[i] = offset;
+                        offset += recvCounts[i];
+                    }
 
+                    MPI.COMM_WORLD.Gatherv(
+                            resultStrip, 0, recvCounts[me], MPI.INT,
+                            finalImageBuffer, 0, recvCounts , displs, MPI.INT, ROOT);
+                    // gatherv 1 root strip, 2 zero offset, 3 how much we sending, 4 mpi.int
+                    //         5 final full image buffer, 6 zero offset, 7 recv c
 
+                    t = System.currentTimeMillis() - t0;
 
+                    System.out.println("ROOT has gathered :)");
 
+                    BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                    resultImage.setRGB(0, 0 , width, height, finalImageBuffer, 0 , width);
 
+                    GUI.log("The DISTRIBUTED convolution took " + t + "ms.\n", GUI.textArea);
+
+                    //save the new image
+                    try {
+                        ImageIO.write(resultImage, "png", new File("output.png"));
+                    } catch (IOException exception) {
+                        throw new RuntimeException(exception);
+                    }
+
+                    openImage();
 
                 } else {
                     System.out.println("No option is selected.");
@@ -473,7 +509,7 @@ public class GUI {
         int[][] image = new int[width][height];
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                System.out.println("buff: " + buff[j * width + i]); // buff is all 0 ⚠️
+                //System.out.println("buff: " + buff[j * width + i]);
                 imageArr[i][j] = buff[j * (width) + i];
             }
         }
@@ -516,6 +552,16 @@ public class GUI {
             }
         }
         return resultImage;
+    }
+
+    public static void openImage(){
+        File outputFile = new File("output.png");
+        Desktop desktop = Desktop.getDesktop();
+        try {
+            desktop.open(outputFile);
+        } catch (IOException e) {
+            GUI.log("There was error while opening the image.\nThe image is saved in working directory.", GUI.textArea);
+        }
     }
 
 }
