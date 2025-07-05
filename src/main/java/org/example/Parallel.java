@@ -66,7 +66,7 @@ public class Parallel {
 
         @Override
         protected void compute() {
-            if (endY - startY <= 4 || endX - startX <= 4){
+            if (endY - startY <= 64 || endX - startX <= 64){ // chunks
                 for (int y = startY; y < endY; y++) {
                     for (int x = startX; x < endX; x++) {
 
@@ -108,7 +108,7 @@ public class Parallel {
                 }
             } else {
                 int midY = startY + (endY - startY) / 2;
-                int midX = startX + (endX - startX) /2;
+                int midX = startX + (endX - startX) / 2;
 
                 invokeAll(  new RecursiveTask(image, resultImage, kernel, startY, midY, startX, midX),  // (topleft)
                             new RecursiveTask(image, resultImage, kernel, startY, midY, midX, endX),    // (topright)

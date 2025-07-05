@@ -80,7 +80,6 @@ public class GUI {
 
             System.out.println("["+ me +"]" + "Workers done! :)");
 
-
         }
 
 
