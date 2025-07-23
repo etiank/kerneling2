@@ -11,7 +11,7 @@ import java.util.concurrent.RecursiveAction;
 public class Parallel {
 
     //FORK&JOIN,
-    public static int CORES = Runtime.getRuntime().availableProcessors() -1;    // leaving 1 for the system
+    public static int CORES = Runtime.getRuntime().availableProcessors() ;    // leaving 1 for the system
     public static ForkJoinPool forkJoinPool = new ForkJoinPool(CORES);
 
 
@@ -66,7 +66,7 @@ public class Parallel {
 
         @Override
         protected void compute() {
-            if (endY - startY <= 64 || endX - startX <= 64){ // chunks
+            if (endY - startY <= 32 || endX - startX <= 32){ // chunks
                 for (int y = startY; y < endY; y++) {
                     for (int x = startX; x < endX; x++) {
 

@@ -33,10 +33,13 @@ public class GUI {
 
             new GUI(nodes, me);
 
-        } else {   // receive kernel, image_size, image strip, convolute it and send it back
+        } else {
+            // receive kernel, image_size, image strip, convolute it and send it back
+            //while (true) {
+            //for (int i = 0; i <= 10; i++) {
 
-            float[] receivedKernel = new float[9];
-            MPI.COMM_WORLD.Bcast(receivedKernel, 0, 9, MPI.FLOAT, ROOT); // receive kernel ✅
+                float[] receivedKernel = new float[9];
+                MPI.COMM_WORLD.Bcast(receivedKernel, 0, 9, MPI.FLOAT, ROOT); // receive kernel ✅
                 /*for (int i = 0; i < receivedKernel.length; i++) {
                     System.out.println("["+ me + "] " + receivedKernel[i]);
                 }*/
@@ -48,42 +51,44 @@ public class GUI {
             int height = dimensions[1];
             System.out.println("[" + me + "] Width: " + dimensions[0] + " Height: " + dimensions[1]);
             */
-            int[] recvWidth= new int[1];
-            MPI.COMM_WORLD.Bcast(recvWidth, 0, 1, MPI.INT, ROOT);
-            int width = recvWidth[0]; System.out.println("["+ me +"]" + "Image width is: " + width);
-            // stripHeight
-            int[] stripHeights = new int[nodes];
-            MPI.COMM_WORLD.Bcast(stripHeights, 0, nodes, MPI.INT, ROOT); System.out.println("["+ me +"]" + "Image height is: " + stripHeights[me]);
-            int recvHeight =  stripHeights[me];
+                int[] recvWidth = new int[1];
+                MPI.COMM_WORLD.Bcast(recvWidth, 0, 1, MPI.INT, ROOT);
+                int width = recvWidth[0];
+                System.out.println("[" + me + "]" + "Image width is: " + width);
+                // stripHeight
+                int[] stripHeights = new int[nodes];
+                MPI.COMM_WORLD.Bcast(stripHeights, 0, nodes, MPI.INT, ROOT);
+                System.out.println("[" + me + "]" + "Image height is: " + stripHeights[me]);
+                int recvHeight = stripHeights[me];
 
-            recvBuff = new int[recvHeight*width];
+                recvBuff = new int[recvHeight * width];
 
 
-            //ScatterV worker: (1 ignore, 2 ignore, 3 ignore, 4 ignore, 5 ignore)
-            // (6 recvBuffer, 0, number of elements)
-            MPI.COMM_WORLD.Scatterv(
-                    null, 0, null, null, MPI.INT,
-                    recvBuff,0, recvHeight * width, MPI.INT, ROOT);
+                //ScatterV worker: (1 ignore, 2 ignore, 3 ignore, 4 ignore, 5 ignore)
+                // (6 recvBuffer, 0, number of elements)
+                MPI.COMM_WORLD.Scatterv(
+                        null, 0, null, null, MPI.INT,
+                        recvBuff, 0, recvHeight * width, MPI.INT, ROOT);
 
 
             /*MPI.COMM_WORLD.Scatter(null, 0, 0, MPI.INT,
                     recvBuff, 0, height*width, MPI.INT, ROOT);*/
-            // kaj (null), od kje zacnemo (0), koliko posljemo (0), kaksen tip,
-            // kje dobimo, od kje naprej, koliko dobimo, kakasen tip, root
+                // kaj (null), od kje zacnemo (0), koliko posljemo (0), kaksen tip,
+                // kje dobimo, od kje naprej, koliko dobimo, kakasen tip, root
 
-            int[] resultStrip = convolute(width, recvHeight, receivedKernel, recvBuff);
-            int sendCount = recvHeight*width;
+                int[] resultStrip = convolute(width, recvHeight, receivedKernel, recvBuff);
+                int sendCount = recvHeight * width;
 
-            MPI.COMM_WORLD.Gatherv(
-                    resultStrip, 0, sendCount, MPI.INT,
-                    null, 0, null , null, MPI.INT, ROOT);
+                MPI.COMM_WORLD.Gatherv(
+                        resultStrip, 0, sendCount, MPI.INT,
+                        null, 0, null, null, MPI.INT, ROOT);
 
-            System.out.println("["+ me +"]" + "Workers done! :)");
+                System.out.println("[" + me + "]" + "Workers done! :)");
 
-        }
+            }
 
-
-        MPI.Finalize();
+        //}
+            MPI.Finalize();
 
     }
 
@@ -109,8 +114,8 @@ public class GUI {
     public GUI(int nodes, int me) {
 
         // FRAME THE FRAME
-        JFrame frame = new JFrame("Process image kerneling");
-        ImageIcon icon = new ImageIcon("icon.jpg");
+        JFrame frame = new JFrame("Kernel Image Processing");
+        ImageIcon icon = new ImageIcon("icon.png");
         frame.setIconImage(icon.getImage());
         frame.setSize(600,400);
         frame.setLocationRelativeTo(null);
@@ -142,7 +147,7 @@ public class GUI {
         textArea.setBackground(new Color(255,255,255));
         textArea.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
         textArea.setFont(new Font("Lucida Console", Font.PLAIN, 12));
-        textArea.append("[Console logs]\n\n");
+        textArea.append("[Console logs]\n");
         //textArea.setLineWrap(true);
         textArea.setMinimumSize(new Dimension(500,150));
 
@@ -441,7 +446,7 @@ public class GUI {
                         throw new RuntimeException(exception);
                     }
 
-                    openImage();
+                    //openImage();
 
                 } else {
                     System.out.println("No option is selected.");
@@ -470,7 +475,7 @@ public class GUI {
 
         setConstraints(grid,1,4,1,1,GridBagConstraints.BOTH); panel.add(runButton, grid);
 
-        textArea.append("\n\n\n\n\n\n");
+        //textArea.append("\n\n\n\n\n\n");
         frame.add(panel);
         frame.setVisible(true);
 
