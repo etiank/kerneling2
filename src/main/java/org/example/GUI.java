@@ -35,8 +35,6 @@ public class GUI {
 
         } else {
             // receive kernel, image_size, image strip, convolute it and send it back
-            //while (true) {
-            //for (int i = 0; i <= 10; i++) {
 
                 float[] receivedKernel = new float[9];
                 MPI.COMM_WORLD.Bcast(receivedKernel, 0, 9, MPI.FLOAT, ROOT); // receive kernel ✅
@@ -446,7 +444,7 @@ public class GUI {
                         throw new RuntimeException(exception);
                     }
 
-                    //openImage();
+                    openImage();
 
                 } else {
                     System.out.println("No option is selected.");

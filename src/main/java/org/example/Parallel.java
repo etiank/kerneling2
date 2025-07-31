@@ -30,11 +30,11 @@ public class Parallel {
 
         width = image.getWidth(); height = image.getHeight();
         GUI.log("Width: " + width + " Height: " + height + "\n", GUI.textArea);
-        BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB); // torej rgb vsako posebej
+        BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB); //
 
         long t0 = System.currentTimeMillis(); long t; // moved here from line 23 to not include bufferedimage into the convolution time
         //magic happens here
-        RecursiveTask task = new RecursiveTask(image, resultImage, kernel, 1, height-1, 1, width-1);
+        RecursiveTask task = new RecursiveTask(image, resultImage, kernel, 1, height-1, 1, width-1); // simulating bar idk why
         forkJoinPool.invoke(task);
 
         t = System.currentTimeMillis() - t0;
