@@ -27,14 +27,15 @@ public class Sequential {
         long t0 = System.currentTimeMillis(); long t; // moved here from line 15 to not include bufferedimage into the convolution time
 
         // CONVOLUTION
-        for (int y = 1; y < height -1; y++) {
-            for (int x = 1; x < width -1; x++) {
+        for (int y = 1; y < height-1; y++) { // 1, height-1
+            for (int x = 1; x < width-1; x++) {
+
 
                 //vsako barvo posebej
                 int red     = 0;
                 int green   = 0;
                 int blue    = 0;
-
+/////
                 for (int i = -1; i <= 1; i++) {
                     for (int j = -1; j <= 1; j++) {
                         // get that one pixel from the image x,y
@@ -47,18 +48,121 @@ public class Sequential {
                     }
                 }
 
+/*////
+//                System.out.println("x: " + x + "  y: " + y );
+                        if (y == 0 && x == 0) {
+                            System.out.println("x: " + x + " y: " + y + " THIS ONE SHOULD ONLY APPEAR ONCE PER IMAGE");
+                            // cancella x-1 e y-1
+                            for (int i = 0; i <= 1; i++) {
+                                for (int j = 0; j <= 1; j++) {
+                                    // get that one pixel from the image x,y
+                                    // pol rabi se vse pixle okoli
+                                    // (x-1, x, x+1,y-1, y, y+1)     →            ↓      ↓
+                                    Color pixelColor = new Color(image.getRGB(x + i, y + j));
+                                    red     += (int) (pixelColor.getRed() * kernel[i + 1][j + 1]);
+                                    green   += (int) (pixelColor.getGreen() * kernel[i + 1][j + 1]);
+                                    blue    += (int) (pixelColor.getBlue() * kernel[i + 1][j + 1]);
+
+                                }
+                            }
+
+                        } else if (y == 0) {
+                            System.out.println("x: " + x + " y: " + y + " THIS SHOULD APPEAR " + (height-1) + " (" + (height-2) + ") times");
+                            // cancella x-1 e y-1
+                            for (int i = -1; i <= 1; i++) {
+                                for (int j = 0; j <= 1; j++) {
+                                    // get that one pixel from the image x,y
+                                    // pol rabi se vse pixle okoli
+                                    // (x-1, x, x+1,y-1, y, y+1)     →            ↓      ↓
+                                    Color pixelColor = new Color(image.getRGB(x + i, y + j));
+                                    red     += (int) (pixelColor.getRed() * kernel[i + 1][j + 1]);
+                                    green   += (int) (pixelColor.getGreen() * kernel[i + 1][j + 1]);
+                                    blue    += (int) (pixelColor.getBlue() * kernel[i + 1][j + 1]);
+                                }
+                            }
+                        }else if (x == 0) {
+                            System.out.println("x: " + x + " y: " + y + " THIS SHOULD APPEAR " + (width-1) + " (" + (width-2) + ") times");
+                            // cancella x-1 e y-1
+                            for (int i = 0; i <= 1; i++) {
+                                for (int j = -1; j <= 1; j++) {
+                                    // get that one pixel from the image x,y
+                                    // pol rabi se vse pixle okoli
+                                    // (x-1, x, x+1,y-1, y, y+1)     →            ↓      ↓
+                                    Color pixelColor = new Color(image.getRGB(x+i,y+j));
+                                    red     +=  (int) (pixelColor.getRed() * kernel[i+1][j+1]);
+                                    green   +=  (int) (pixelColor.getGreen() * kernel[i+1][j+1]);
+                                    blue    +=  (int) (pixelColor.getBlue() * kernel[i+1][j+1]);
+                                }
+                            }
+
+                        }else if (y == height-1 && x == width-1) {
+                            System.out.println("x: " + x + " y: " + y + " THIS ONE SHOULD ONLY APPEAR ONCE PER IMAGE");
+                            // cancella x+1 e y+1
+                            for (int i = -1; i <= 0; i++) {
+                                for (int j = -1; j <= 0; j++) {
+                                    Color pixelColor = new Color(image.getRGB(x + i, y + j));
+                                    red     += (int) (pixelColor.getRed() * kernel[i + 1][j + 1]);
+                                    green   += (int) (pixelColor.getGreen() * kernel[i + 1][j + 1]);
+                                    blue    += (int) (pixelColor.getBlue() * kernel[i + 1][j + 1]);
+                                }
+                            }
+
+
+                        }else if (y == height-1) {
+                            System.out.println("x: " + x + "y: " + y + " >>> idk, this one>? 🔝");
+                            // cancella x-1 e y-1
+                            for (int i = -1; i <= 1; i++) {
+                                for (int j = -1; j <= 1; j++) {
+                                    // get that one pixel from the image x,y
+                                    // pol rabi se vse pixle okoli
+                                    // (x-1, x, x+1,y-1, y, y+1)     →            ↓      ↓
+                                    Color pixelColor = new Color(image.getRGB(x + i, y + j));
+                                    red     += (int) (pixelColor.getRed() * kernel[i + 1][j + 1]);
+                                    green   += (int) (pixelColor.getGreen() * kernel[i + 1][j + 1]);
+                                    blue    += (int) (pixelColor.getBlue() * kernel[i + 1][j + 1]);
+                                }
+                            }
+                        } else if (x == width-1) {
+                            System.out.println("x: " + x + "y: " + y + " >>> idk, this one>? 🔝");
+                            // cancella x-1 e y-1
+                            for (int i = -1; i <= 0; i++) {
+                                for (int j = -1; j <= 1; j++) {
+                                    // get that one pixel from the image x,y
+                                    // pol rabi se vse pixle okoli
+                                    // (x-1, x, x+1,y-1, y, y+1)     →            ↓      ↓
+                                    Color pixelColor = new Color(image.getRGB(x+i,y+j));
+                                    red     +=  (int) (pixelColor.getRed() * kernel[i+1][j+1]);
+                                    green   +=  (int) (pixelColor.getGreen() * kernel[i+1][j+1]);
+                                    blue    +=  (int) (pixelColor.getBlue() * kernel[i+1][j+1]);
+                                }
+                            }
+
+                        } else {
+                            // normale, prende tutto intorno
+                            for (int i = - 1; i <= 1; i++) {
+                                for (int j = -1; j <= 1; j++) {
+                                    Color pixelColor = new Color(image.getRGB(x+i,y+j));
+                                    red     +=  (int) (pixelColor.getRed() * kernel[i+1][j+1]);
+                                    green   +=  (int) (pixelColor.getGreen() * kernel[i+1][j+1]);
+                                    blue    +=  (int) (pixelColor.getBlue() * kernel[i+1][j+1]);
+                                }
+                            }
+                        }
+
+*/// //
+                System.out.println(":D");
                 //save the new values
-                int newRed      = Math.min( 255, Math.max(0, red));
-                int newGreen    = Math.min(255, Math.max(0, green));
-                int newBlue     = Math.min(255, Math.max(0, blue));
+                red      = Math.min( 255, Math.max(0, red));
+                green    = Math.min(255, Math.max(0, green));
+                blue     = Math.min(255, Math.max(0, blue));
 
                 // merge them into one pixel
-                int rgb = new Color(newRed, newGreen, newBlue).getRGB();
                 // paint the pixel on the new image
-                resultImage.setRGB(x, y, rgb);
-
+                resultImage.setRGB(x, y, new Color(red,green,blue).getRGB());
             }
         }
+
+
 
         t = System.currentTimeMillis() - t0;
 
@@ -68,7 +172,6 @@ public class Sequential {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
 
         //System.out.println("The SEQUENTIAL convolution took " + t + "ms.");
         GUI.log("The SEQUENTIAL convolution took " + t + "ms.\n", GUI.textArea);

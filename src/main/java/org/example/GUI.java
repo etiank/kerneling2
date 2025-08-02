@@ -100,6 +100,7 @@ public class GUI {
     static boolean enableTable = false;
     static String directory = "";
     static String fileName = "";
+
     static int[] recvBuff;
     public static float[][] kernel =  new float[][] { // DEFAULT KERNEL IS IDENTITY
             {0, 0, 0},
@@ -164,7 +165,7 @@ public class GUI {
         JLabel kernelLabel = new JLabel("Filter: ");
         kernelLabel.setBorder(BorderFactory.createLineBorder(Color.black));
         JComboBox<String> kernelMode = new JComboBox<>(
-                new String[]{"","Custom", "Sharpen", "Box blur", "Gaussian blur", "Edge detection", "Emboss"});
+                new String[]{"","Custom", "Sharpen", "Box blur", "Gaussian blur", "Edge detection", "Emboss", "Sobel", "Test"});
         kernelMode.addActionListener((e) -> {
             selectedKernel = (String) kernelMode.getSelectedItem();
             if (GUI.selectedKernel != "Custom"){GUI.enableTable = false;}
@@ -222,7 +223,7 @@ public class GUI {
                     }
 
                 } catch (IOException ex) {
-                    System.out.println("An error occured while trying to load the image");
+                   log("An error occurred while trying to load the image. Try again.\n", textArea);
                 }
                 //System.out.println("Image2 size: "+ image2.getWidth(null)+"x"+image2.getHeight(null));
                 picLabel.setIcon(new ImageIcon(image2));// picLabel.setSize(10,10);
@@ -282,7 +283,7 @@ public class GUI {
                                 {2, 4, 2}   // {1, 2, 1}
                         };
                         for (int i = 0; i < GUI.kernel.length; i++) {
-                            for (int j = 0; j < GUI.kernel[i].length; j++) GUI.kernel[i][j] = GUI.kernel[i][j] * (float)(1.0/36); // was 1/16
+                            for (int j = 0; j < GUI.kernel[i].length; j++) GUI.kernel[i][j] = GUI.kernel[i][j] * (float)(1.0/32); // was 1/16
                         }
 
                         break;
@@ -298,6 +299,20 @@ public class GUI {
                                 {-2,-1, 0},
                                 {-1, 1, 1},
                                 { 0, 1, 2}
+                        };
+                        break;
+                    case "Sobel":
+                        kernel = new float[][]{
+                                {1, 0, -1},
+                                {2, 0, -2},
+                                {1, 0, -1}
+                        };
+                        break;
+                    case "Test":
+                        kernel = new float[][]{
+                                {-1, 0, 1},
+                                {0,  1, 0},
+                                {1,  0,-1}
                         };
                         break;
                     default:
@@ -316,6 +331,8 @@ public class GUI {
                 if (seqRadio.isSelected()) {
                     selectedMode = "Sequential";
                     Sequential.convolute(fileName, directory, kernel);
+                    //DEBUG
+                    //Sequential.convolute("test2.png", "C:\\Users\\ket\\IdeaProjects\\kerneling2\\", kernel);
                 } else if (parRadio.isSelected()) {
                     selectedMode = "Parallel";
                     Parallel.convolute(fileName, directory, kernel);
